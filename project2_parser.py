@@ -334,32 +334,106 @@ class Parser:
 
 
     def parse_statement(self):
-
+        if self.current_token[0] == 'if': #check if the current token is an if statement
+            result = self.if_statement() #parse the if statement
+        elif self.current_token[0] == 'while':#check if the current token is an while statement
+            result = self.while_loop() #parse the while loop
+        elif self.current_token[1] == 'IDENTIFIER':#check if the current token is an identifier statement
+            result = self.assignment() #parse the assigment
+        else:
+            self.advance()
+            result = None #sets to none if no statements have been parsed
+        return result
 
     def parse_declaration(self):
 
 
     def parse_assignment(self):
-
+        identifier = self.current_token[0] #sets the current token to identifier
+        self.advance()
+        if self.current_token and self.current_token[0] == "=": #makes sure the token is not none and if its an equal sign as = will follow
+            self.advance()
+            expression = self.arithmetic_expression()#parse the arithmetic expression
+            return ('=', identifier, expression)
 
     def parse_if_statement(self):
- 
+        self.advance()  
+        condition = self.condition()#parse the condition
+        trueBlock = self.program()#parses the true block
+
+        if len(trueBlock) == 1:#checks to see if there is only 1 statement
+            trueBlock = trueBlock[0]#chagnes the true block from being a list with one item to have that being the item iteself
+
+        elseBlock = None #none unles theres an else in the block
+        if self.current_token and self.current_token[0] == 'else':#looks for the else token
+            self.advance()
+            elseBlock = self.program()#parses the else block
+            if len(elseBlock) == 1:#checks if the else block is only 1 statement
+                elseBlock = elseBlock[0]##chagnes the else block from being a list with one item to have that being the item iteself
+
+        if elseBlock is not None:#checks for an else block
+            return ('if','else', condition, trueBlock, elseBlock)#returns thhe truckblock  elseblock condition  'if' and 'else' and represnets a node
+        else:
+            return ('if', condition, trueBlock)#reutrns if condition and trueblock and represnets a node
+
 
     def parse_while_loop(self):
-        
+        self.advance()  
+        condition = self.condition()#parses the condition
+        loop_block = self.program()#parses the body of the while loop
         return WhileLoopNode(condition, loop_block)
     
     # No need to check type mismatch here.
     def parse_condition(self):
-        
-        return ConditionNode(left, operator, right)
+            left = self.arithmetic_expression()#parses the left side of the operand
+            if self.current_token and self.current_token[1] == "OPERATOR":#checks if the token exists and if its an operator
+                operator = self.current_token[0]#assigns the operator
+                self.advance()
+                right = self.arithmetic_expression()#parses the right side of the operand
+            return ConditionNode(left, operator, right)
 
     def parse_arithmetic_expression(self):
+        leftOperand = self.term()#parse the term
 
+        #while theres tokens to proccess and the current token is an operator and is either plus or -
+        while self.current_token and self.current_token[1] == "OPERATOR" and self.current_token[0] in {"+", "-"}: 
+            operator = self.current_token[0]#assigns + or - to the operator 
+            self.advance()
+            rightOperand = self.term()#parse the term
+            leftOperand = (operator, leftOperand, rightOperand)#assigns the operator and the left and right operand back to the left operand
+        return leftOperand
+    
         
 
     def parse_term(self):
-
+        leftOperand = self.factor() #parses the factor
+        while self.current_token and self.current_token[0] in {"*", "/"}: #while there tokens to procces and the current toek is * or /
+            operator = self.current_token[0] #assigns or * or /
+            self.advance()
+            rightOperand = self.factor() #parses the right side of the factor and assinngs it to right operand
+            leftOperand = (operator, leftOperand, rightOperand)#parses the right side of the factor and assinngs it to right operand
+        return leftOperand
 
     def parse_factor(self):
+        currentToken = self.current_token#current token
+        if currentToken is None:#if no more token to parse return false
+            return False
+        if currentToken[1] == "NUMBER": #checks if the current token is a number
+            if '.' in currentToken[0]:#check if theres a decimal
+                value = float(currentToken[0])  #if it is then converts it to a float
+            else:
+                value = int(currentToken[0])  # other wise we conevert it to a int
+            self.advance()
+            return value
+        elif currentToken[1] == "IDENTIFIER":#checks if the current token is an identifier
+            identifier = currentToken[0]#gets the name of the identifier
+            self.advance()
+            return identifier
 
+        elif currentToken[0] == "(":#checks if the current token is (
+            self.advance()
+            expression = self.arithmetic_expression()#if it is ( then it parses the expression inside the ()
+            if self.current_token[0] != ")":#checks to make sure there is a ) and if not returns false
+                return False
+            self.advance()
+            return expression
