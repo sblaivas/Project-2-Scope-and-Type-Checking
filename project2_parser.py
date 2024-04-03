@@ -237,7 +237,7 @@ class Parser:
         self.lexer = lexer
         self.current_token = self.lexer.get_next_token()
         # implement symbol table and scopes
-       
+        self.scopes = [{}]
         self.messages = []
 
     def print_parse_tree(self, node, indent=0):
@@ -298,14 +298,18 @@ class Parser:
             self.error(f'Expected token of type {token_type}, but found {self.current_token.type}')
 
     # enter the new scope in the program
-    def enter_scope(self, scope_prefix):
-        
+    def enter_scope(self, scope_prefix= None):
+        self.scopes.append({})
+
     # leave the current scope
     def leave_scope(self):
-        
+        if len(self.scopes) > 1:
+            self.scopes.pop()
+        else: 
+            raise Exception("Error cant leave the scope")
     # return the current scope
     def current_scope(self):
-        
+        return self.scope[-1]#current elememt should be the last element of the stack so thats what we return
 
     def checkVarDeclared(self, identifier):
         
