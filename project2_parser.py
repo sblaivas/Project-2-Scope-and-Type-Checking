@@ -239,6 +239,7 @@ class Parser:
         # implement symbol table and scopes
         self.scopes = [{}]
         self.messages = []
+        self.advance() 
 
     def print_parse_tree(self, node, indent=0):
         message = ""
@@ -312,8 +313,8 @@ class Parser:
         return self.scope[-1]#current elememt should be the last element of the stack so thats what we return
 
     def checkVarDeclared(self, identifier):
-        
-        if #implement :
+        currentScope = self.current_scope()
+        if identifier in currentScope:
             self.error(f'Variable {identifier} has already been declared in the current scope')
 
     def checkVarUse(self, identifier):
@@ -323,10 +324,18 @@ class Parser:
 
     # return false when types mismatch, otherwise ret true
     def checkTypeMatch(self, vType, eType, var, exp):
-
+        if vType == eType:
+            return True
+        else:
+            return False
     # return its type or None if not found
     def getMyType(self, identifier):
-      
+        for scope in reversed(self.scopes):#This line iterate backwards as the most recent added scope is checkef first
+            if identifier in scope:#We checks to see if the identifier is a key in the scope
+                return scope[identifier]#returns the type of the identifer
+            
+        return None
+
 
     def parse_program(self):
         statements = []
